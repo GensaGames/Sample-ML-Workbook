@@ -1,12 +1,7 @@
 from __future__ import division
-from scipy.optimize import fmin_bfgs
-from scipy.optimize import check_grad
-from sklearn import preprocessing
 from collections import OrderedDict
-
 import numpy as np
 import scipy.optimize
-
 
 # **********************
 # Example to show working LOGISTIC REGRESSION FUNCTION to solve CLASSIFICATION PROBLEM
@@ -63,8 +58,8 @@ def train(x, y, variations, lamb):
 
     for variant in variations:
         initial = np.zeros(size)
-        _y = np.array(map(
-            lambda _x: int(variant == _x), y)).reshape(len(y), 1)
+        _y = np.array([int(item == variant) for item in y])\
+            .reshape(len(y), 1)
 
         theta = scipy.optimize.fmin_bfgs(
             cost, initial,fprime=gradient, args=(x, _y, lamb))

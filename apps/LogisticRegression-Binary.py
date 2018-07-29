@@ -1,8 +1,5 @@
 from __future__ import division
-from numpy.linalg import inv
 import numpy as np
-import logging
-import math
 
 # *************************************************************************************
 # Example to show working LOGISTIC REGRESSION FUNCTION to solve CLASSIFICATION PROBLEM

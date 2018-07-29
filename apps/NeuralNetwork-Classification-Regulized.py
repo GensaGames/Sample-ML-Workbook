@@ -1,13 +1,5 @@
 from __future__ import division
-from scipy.optimize import fmin_bfgs
-import scipy.optimize
-import sklearn.preprocessing
-
-from scipy.optimize import check_grad
-from sklearn import preprocessing
 from collections import OrderedDict
-import hashlib
-
 import numpy as np
 
 
@@ -22,6 +14,7 @@ import numpy as np
 # **********************
 # Our model it's INPUT LAYER with 4 units(Features) w/o Bias HIDDEN LAYER with 8
 # and OUTPUT LAYER with 3 Units.
+import scipy.optimize
 
 
 def sigmoid(m):
@@ -124,8 +117,8 @@ def rand_init(l_out, l_in):
 def get_binary_y(y):
     variants = list(OrderedDict.fromkeys(Y_LOADED))
 
-    return np.array(map(
-        lambda x: [int(z == x) for z in variants], y))
+    return np.array(list(map(
+        lambda x: [int(item == x) for item in variants], y)))
 
 
 def train(x, y, hidden_size, lam):
