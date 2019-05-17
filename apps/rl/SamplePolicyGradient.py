@@ -3,87 +3,86 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 
-#Hyperparameters
 NUM_EPISODES = 4000
 LEARNING_RATE = 0.000025
 GAMMA = 0.99
 
-# Create gym and seed numpy
-env = gym.make('CartPole-v0')
-nA = env.action_space.n
-np.random.seed(1)
 
-# Init weight
-w = np.random.rand(4, 2)
+# noinspection PyMethodMayBeStatic
+class Agent:
+    def __init__(self):
+        self.w = np.random.rand(4, 2)
 
-# Keep stats for final print of graph
-episode_rewards = []
+    def policy(self, state):
+        z = state.dot(self.w)
+        exp = np.exp(z)
+        return exp/np.sum(exp)
 
+    def __softmax_grad(self, softmax):
+        s = softmax.reshape(-1,1)
+        return np.diagflat(s) - np.dot(s, s.T)
 
-# Our policy that maps state to action parameterized by w
-def policy(state,w):
-    z = state.dot(w)
-    exp = np.exp(z)
-    return exp/np.sum(exp)
-
-
-# Vectorized softmax Jacobian
-def softmax_grad(softmax):
-    s = softmax.reshape(-1,1)
-    return np.diagflat(s) - np.dot(s, s.T)
-
-
-# Main loop 
-# Make sure you update your weights AFTER each episode
-for e in range(NUM_EPISODES):
-
-    state = env.reset()[None,:]
-
-    grads = []
-    rewards = []
-
-    # Keep track of game score to print
-    score = 0
-
-    while True:
-
-        # Uncomment to see your model train in real time (slower)
-        #env.render()
-
-        # Sample from policy and take action in environment
-        probs = policy(state,w)
-        action = np.random.choice(nA,p=probs[0])
-        next_state,reward,done,_ = env.step(action)
-        next_state = next_state[None,:]
-
-        # Compute gradient and save with reward in memory for our weight updates
-        dsoftmax = softmax_grad(probs)[action,:]
+    def grad(self, probs, action, state):
+        dsoftmax = self.__softmax_grad(probs)[action,:]
         dlog = dsoftmax / probs[0,action]
         grad = state.T.dot(dlog[None,:])
+        return grad
 
-        grads.append(grad)
-        rewards.append(reward)
+    def update_with(self, grads, rewards):
 
-        score+=reward
+        for i in range(len(grads)):
+            # Loop through everything that happened in the episode
+            # and update towards the log policy gradient times **FUTURE** reward
+            self.w += LEARNING_RATE * grads[i] * sum(
+                [ r * (GAMMA ** r) for t,r in enumerate(rewards[i:])])
 
-        # Dont forget to update your old state to the new state
-        state = next_state
 
-        if done:
-            break
 
-    # Weight update
-    for i in range(len(grads)):
+def main(argv):
+    env = gym.make('CartPole-v0')
+    np.random.seed(1)
 
-        # Loop through everything that happend in the episode
-        # and update towards the log policy gradient times **FUTURE** reward
-        w += LEARNING_RATE * grads[i] * sum([ r * (GAMMA ** r) for t,r in enumerate(rewards[i:])])
+    agent = Agent()
+    complete_scores = []
 
-    # Append for logging and print
-    episode_rewards.append(score)
-    print("EP: " + str(e) + " Score: " + str(score) + "         ",end="\r", flush=False)
+    for e in range(NUM_EPISODES):
+        state = env.reset()[None, :]
 
-plt.plot(np.arange(NUM_EPISODES),
-         episode_rewards)
-plt.show()
-env.close()
+        rewards = []
+        grads = []
+        score = 0
+
+        while True:
+
+            probs = agent.policy(state)
+            action_space = env.action_space.n
+            action = np.random.choice(action_space, p=probs[0])
+
+            next_state, reward, done,_ = env.step(action)
+            next_state = next_state[None,:]
+            grad = agent.grad(probs, action, state)
+
+            grads.append(grad)
+            rewards.append(reward)
+
+            score += reward
+            state = next_state
+
+            if done:
+                break
+
+        agent.update_with(grads, rewards)
+        complete_scores.append(score)
+
+    env.close()
+    plt.plot(np.arange(NUM_EPISODES),
+             complete_scores)
+    plt.show()
+
+
+if __name__ == '__main__':
+    main(None)
+
+
+
+
