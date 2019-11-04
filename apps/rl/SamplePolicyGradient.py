@@ -84,5 +84,15 @@ if __name__ == '__main__':
     main(None)
 
 
+<<<<<<< HEAD
+        # Loop through everything that happend in the episode
+        # and update towards the log policy gradient times **FUTURE** reward
+
+        total_grad_effect = 0
+        for t, r in enumerate(rewards[i:]):
+            total_grad_effect += r * (GAMMA ** r)
+        w += LEARNING_RATE * grads[i] * total_grad_effect
+=======
+>>>>>>> a1799297f2c1c5bc506a15eca1c283252b971b4b
 
 

@@ -11,6 +11,7 @@ gym = "*"
 keras = "*"
 tensorflow = "*"
 matplotlib = "*"
+scikit-learn = "*"
 
 [requires]
 python_version = "3"
