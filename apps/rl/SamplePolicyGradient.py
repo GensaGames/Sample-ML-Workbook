@@ -31,10 +31,13 @@ class Agent:
     def update_with(self, grads, rewards):
 
         for i in range(len(grads)):
-            # Loop through everything that happened in the episode
+            # Loop through everything that happend in the episode
             # and update towards the log policy gradient times **FUTURE** reward
-            self.w += LEARNING_RATE * grads[i] * sum(
-                [ r * (GAMMA ** r) for t,r in enumerate(rewards[i:])])
+
+            total_grad_effect = 0
+            for t, r in enumerate(rewards[i:]):
+                total_grad_effect += r * (GAMMA ** r)
+            self.w += LEARNING_RATE * grads[i] * total_grad_effect
 
 
 
@@ -77,22 +80,9 @@ def main(argv):
     env.close()
     plt.plot(np.arange(NUM_EPISODES),
              complete_scores)
-    plt.show()
+    plt.savefig('image1.png')
 
 
 if __name__ == '__main__':
     main(None)
-
-
-<<<<<<< HEAD
-        # Loop through everything that happend in the episode
-        # and update towards the log policy gradient times **FUTURE** reward
-
-        total_grad_effect = 0
-        for t, r in enumerate(rewards[i:]):
-            total_grad_effect += r * (GAMMA ** r)
-        w += LEARNING_RATE * grads[i] * total_grad_effect
-=======
->>>>>>> a1799297f2c1c5bc506a15eca1c283252b971b4b
-
 
