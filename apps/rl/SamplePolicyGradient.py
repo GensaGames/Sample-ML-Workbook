@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
 import copy
 
 NUM_EPISODES = 4000
@@ -11,7 +12,8 @@ GAMMA = 0.99
 # noinspection PyMethodMayBeStatic
 class Agent:
     def __init__(self):
-        self.w = np.random.rand(4, 2)
+        self.poly = PolynomialFeatures(1)
+        self.w = np.random.rand(5, 2)
 
     def policy(self, state):
         z = state.dot(self.w)
@@ -38,6 +40,7 @@ class Agent:
             for t, r in enumerate(rewards[i:]):
                 total_grad_effect += r * (GAMMA ** r)
             self.w += LEARNING_RATE * grads[i] * total_grad_effect
+            print("Grads update: " + str(np.sum(grads[i])))
 
 
 
@@ -50,6 +53,7 @@ def main(argv):
 
     for e in range(NUM_EPISODES):
         state = env.reset()[None, :]
+        state = agent.poly.fit_transform(state)
 
         rewards = []
         grads = []
@@ -63,6 +67,7 @@ def main(argv):
 
             next_state, reward, done,_ = env.step(action)
             next_state = next_state[None,:]
+            next_state = agent.poly.fit_transform(next_state.reshape(1, 4))
             grad = agent.grad(probs, action, state)
 
             grads.append(grad)

@@ -13,7 +13,7 @@ GAMMA = 0.99
 class Agent:
     def __init__(self):
         self.poly = PolynomialFeatures(1)
-        self.w = np.random.rand(4, 1) - 1
+        self.w = np.random.rand(5, 1) - 0.5
 
     # Our policy that maps state to action parameterized by w
     # noinspection PyShadowingNames
@@ -25,21 +25,21 @@ class Agent:
         s = 1 / (1 + np.exp(-x))
         return s
 
-    def sigmoid_grad(self, x):
-        f = self.sigmoid(x)
-        return f * (1 - f)
+    def sigmoid_grad(self, sig_x):
+        return sig_x * (1 - sig_x)
 
     def grad(self, probs, action, state):
         dsoftmax = self.sigmoid_grad(probs)
         dlog = dsoftmax / probs
         grad = state.T.dot(dlog)
-        grad = grad.reshape(4, 1)
+        grad = grad.reshape(5, 1)
         return grad
 
     def update_with(self, grads, rewards):
-
+        if len(grads) < 50:
+            return
         for i in range(len(grads)):
-            # Loop through everything that happend in the episode
+            # Loop through everything that happened in the episode
             # and update towards the log policy gradient times **FUTURE** reward
 
             total_grad_effect = 0
@@ -50,13 +50,14 @@ class Agent:
 
 def main(argv):
     env = gym.make('CartPole-v0')
+    np.random.seed(1)
 
     agent = Agent()
     complete_scores = []
 
     for e in range(NUM_EPISODES):
         state = env.reset()[None, :]
-        # state = agent.poly.fit_transform(state)
+        state = agent.poly.fit_transform(state)
 
         rewards = []
         grads = []
@@ -65,11 +66,12 @@ def main(argv):
         while True:
 
             probs = agent.policy(state)
-            action = int(round(probs))
+            action_space = env.action_space.n
+            action = np.random.choice(action_space, p=[probs, 1 - probs])
 
             next_state, reward, done, _ = env.step(action)
             next_state = next_state[None, :]
-            # next_state = agent.poly.fit_transform(next_state.reshape(1, 4))
+            next_state = agent.poly.fit_transform(next_state.reshape(1, 4))
 
             grad = agent.grad(probs, action, state)
             grads.append(grad)
